@@ -40,12 +40,17 @@ def get_recommendation(state: str, ads: dict, gsc: dict) -> str:
     if isinstance(gsc.get("top_queries"), list) and len(gsc["top_queries"]) > 0:
         top_query = gsc["top_queries"][0]
 
+    top_ads_terms = ads.get("top_search_terms", [])
+    ads_terms_text = ""
+    if isinstance(top_ads_terms, list) and top_ads_terms:
+        ads_terms_text = f' Supported by paid search terms such as "{", ".join(top_ads_terms[:2])}".'
+
     gsc_change = gsc.get("impression_change_pct", 0)
 
     if state == "Demand Surge":
         return f"""Increase SEA budget by 15 to 20% in the Netherlands.
 
-Prioritize high-intent keywords such as "{top_query}" and generic search campaigns.
+Prioritize high-intent keywords such as "{top_query}" and generic search campaigns.{ads_terms_text}
 
 Expected impact:
 - Capture rising demand (+{gsc_change}% in generic search impressions)
@@ -53,7 +58,7 @@ Expected impact:
     elif state == "Opportunity":
         return f"""Maintain spend and shift budget toward high-intent campaigns.
 
-Prioritize generic search themes with rising demand and keywords such as "{top_query}".
+Prioritize generic search themes with rising demand and keywords such as "{top_query}".{ads_terms_text}
 
 Expected impact:
 - Capture growing demand more efficiently

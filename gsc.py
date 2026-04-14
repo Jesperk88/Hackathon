@@ -103,6 +103,71 @@ def get_top_queries(df: pd.DataFrame, top_n: int = 5) -> list[str]:
     return query_summary.head(top_n)["query"].tolist()
 
 
+def get_top_query_details(df: pd.DataFrame, top_n: int = 5) -> list[dict]:
+    """
+    Return the top GSC queries in the last 7 days with period-over-period change.
+    """
+    unique_dates = df["date"].dropna().sort_values().unique()
+    if len(unique_dates) < 14:
+        return []
+
+    last_7_dates = unique_dates[-7:]
+    prev_7_dates = unique_dates[-14:-7]
+
+    current_period = df[df["date"].isin(last_7_dates)]
+    previous_period = df[df["date"].isin(prev_7_dates)]
+
+    current_summary = (
+        current_period.groupby("query", as_index=False)["impressions"]
+        .sum()
+        .rename(columns={"impressions": "current_impressions"})
+    )
+    previous_summary = (
+        previous_period.groupby("query", as_index=False)["impressions"]
+        .sum()
+        .rename(columns={"impressions": "previous_impressions"})
+    )
+    total_summary = (
+        df.groupby("query", as_index=False)["impressions"]
+        .sum()
+        .rename(columns={"impressions": "total_impressions"})
+    )
+
+    summary = (
+        total_summary.merge(current_summary, on="query", how="left")
+        .merge(previous_summary, on="query", how="left")
+        .fillna(0)
+    )
+
+    summary["current_impressions"] = summary["current_impressions"].astype(int)
+    summary["previous_impressions"] = summary["previous_impressions"].astype(int)
+    summary["total_impressions"] = summary["total_impressions"].astype(int)
+
+    def compute_change(row: pd.Series):
+        previous = row["previous_impressions"]
+        current = row["current_impressions"]
+        if previous == 0:
+            return None if current == 0 else "new"
+        return round(((current - previous) / previous) * 100, 1)
+
+    summary["change_pct"] = summary.apply(compute_change, axis=1)
+    summary = summary.sort_values(
+        ["current_impressions", "total_impressions"],
+        ascending=[False, False],
+    )
+
+    top_queries = summary.head(top_n)
+    return [
+        {
+            "query": row["query"],
+            "current_impressions": int(row["current_impressions"]),
+            "previous_impressions": int(row["previous_impressions"]),
+            "change_pct": row["change_pct"],
+        }
+        for _, row in top_queries.iterrows()
+    ]
+
+
 def get_gsc_signal(csv_path: str = CSV_PATH) -> dict:
     """
     Main function used by the app.
@@ -112,6 +177,7 @@ def get_gsc_signal(csv_path: str = CSV_PATH) -> dict:
     trend = calculate_trend(daily)
     score, label = score_trend(trend["impression_change_pct"])
     top_queries = get_top_queries(df)
+    top_query_details = get_top_query_details(df)
 
     return {
         "market": MARKET,
@@ -121,6 +187,7 @@ def get_gsc_signal(csv_path: str = CSV_PATH) -> dict:
         "trend_score": score,
         "trend_label": label,
         "top_queries": top_queries,
+        "top_query_details": top_query_details,
         "daily_data": daily.to_dict(orient="records"),
     }
 

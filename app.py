@@ -11,6 +11,14 @@ def safe_get(data: dict, key: str, default="N/A"):
     return default
 
 
+def format_change(change):
+    if change == "new":
+        return "new"
+    if change is None:
+        return "n/a"
+    return f"{change:+.1f}%"
+
+
 result = evaluate_market()
 
 weather = safe_get(result, "weather", {})
@@ -77,11 +85,13 @@ with col2:
     st.write(f"Current Cost: **€{safe_get(ads, 'current_cost')}**")
     st.write(f"Current Conversions: **{safe_get(ads, 'current_conversions')}**")
 
-    top_search_terms = safe_get(ads, "top_search_terms", [])
-    if isinstance(top_search_terms, list) and top_search_terms:
+    top_search_term_details = safe_get(ads, "top_search_term_details", [])
+    if isinstance(top_search_term_details, list) and top_search_term_details:
         st.write("Top search terms:")
-        for term in top_search_terms:
-            st.write(f"- {term}")
+        for item in top_search_term_details:
+            term = item.get("term", "Unknown term")
+            change = format_change(item.get("change_pct"))
+            st.write(f"- {term} ({change})")
 
     st.caption("Rising impressions → increasing market demand")
 
@@ -93,11 +103,13 @@ with col3:
     st.write(f"Previous Impressions: **{safe_get(gsc, 'previous_impressions')}**")
     st.write(f"Change: **{safe_get(gsc, 'impression_change_pct')}%**")
 
-    top_queries = safe_get(gsc, "top_queries", [])
-    if isinstance(top_queries, list) and top_queries:
+    top_query_details = safe_get(gsc, "top_query_details", [])
+    if isinstance(top_query_details, list) and top_query_details:
         st.write("Top queries:")
-        for query in top_queries:
-            st.write(f"- {query}")
+        for item in top_query_details:
+            query = item.get("query", "Unknown query")
+            change = format_change(item.get("change_pct"))
+            st.write(f"- {query} ({change})")
 
     st.caption("Search growth → early demand indicator")
 
