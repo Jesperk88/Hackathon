@@ -99,6 +99,29 @@ def calculate_period_comparison(daily_df: pd.DataFrame) -> dict:
     }
 
 
+def get_top_search_terms(df: pd.DataFrame, top_n: int = 5) -> list[str]:
+    """
+    Return the top Google Ads search terms by total impressions.
+    """
+    if "search term" not in df.columns:
+        return []
+
+    filtered = df.copy()
+    filtered["search term"] = filtered["search term"].astype(str).str.strip()
+    filtered = filtered[
+        filtered["search term"].ne("")
+        & ~filtered["search term"].str.startswith("Total:", na=False)
+    ]
+
+    term_summary = (
+        filtered.groupby("search term", as_index=False)["impressions"]
+        .sum()
+        .sort_values("impressions", ascending=False)
+    )
+
+    return term_summary.head(top_n)["search term"].tolist()
+
+
 def score_paid_demand(impression_change_pct: float) -> tuple[int, str]:
     """
     Convert paid search demand trend into a score (0-30).
@@ -121,6 +144,7 @@ def get_ads_signal(csv_path: str = CSV_PATH) -> dict:
     daily = aggregate_daily_metrics(df)
     comparison = calculate_period_comparison(daily)
     score, label = score_paid_demand(comparison["impression_change_pct"])
+    top_search_terms = get_top_search_terms(df)
 
     return {
         "market": MARKET,
@@ -133,6 +157,7 @@ def get_ads_signal(csv_path: str = CSV_PATH) -> dict:
         "current_conversions": comparison["current_conversions"],
         "previous_conversions": comparison["previous_conversions"],
         "impression_change_pct": comparison["impression_change_pct"],
+        "top_search_terms": top_search_terms,
         "paid_score": score,
         "paid_label": label,
     }

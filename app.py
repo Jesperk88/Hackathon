@@ -76,6 +76,13 @@ with col2:
     st.write(f"Current Clicks: **{safe_get(ads, 'current_clicks')}**")
     st.write(f"Current Cost: **€{safe_get(ads, 'current_cost')}**")
     st.write(f"Current Conversions: **{safe_get(ads, 'current_conversions')}**")
+
+    top_search_terms = safe_get(ads, "top_search_terms", [])
+    if isinstance(top_search_terms, list) and top_search_terms:
+        st.write("Top search terms:")
+        for term in top_search_terms:
+            st.write(f"- {term}")
+
     st.caption("Rising impressions → increasing market demand")
 
 with col3:

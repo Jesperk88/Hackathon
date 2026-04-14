@@ -45,9 +45,7 @@ def get_recommendation(state: str, ads: dict, gsc: dict) -> str:
     if state == "Demand Surge":
         return f"""Increase SEA budget by 15 to 20% in the Netherlands.
 
-Focus on:
-- High-intent keywords such as "{top_query}"
-- Generic search campaigns
+Prioritize high-intent keywords such as "{top_query}" and generic search campaigns.
 
 Expected impact:
 - Capture rising demand (+{gsc_change}% in generic search impressions)
@@ -55,9 +53,7 @@ Expected impact:
     elif state == "Opportunity":
         return f"""Maintain spend and shift budget toward high-intent campaigns.
 
-Focus on:
-- Generic search themes with rising demand
-- Keywords such as "{top_query}"
+Prioritize generic search themes with rising demand and keywords such as "{top_query}".
 
 Expected impact:
 - Capture growing demand more efficiently
@@ -65,9 +61,7 @@ Expected impact:
     elif state == "Stable":
         return """Keep budget stable and monitor changes closely.
 
-Focus on:
-- Core campaigns
-- Search trends and weather shifts
+Keep emphasis on core campaigns while monitoring search trends and weather shifts.
 
 Expected impact:
 - Preserve efficiency while monitoring for change
@@ -75,9 +69,7 @@ Expected impact:
     else:
         return """Reduce spend or reallocate budget to stronger themes or markets.
 
-Focus on:
-- Efficiency protection
-- Only the strongest-performing campaigns
+Protect efficiency and keep spend concentrated on the strongest-performing campaigns.
 
 Expected impact:
 - Lower wasted spend in weaker demand conditions
